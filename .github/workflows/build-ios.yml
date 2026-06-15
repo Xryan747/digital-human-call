@@ -15,7 +15,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '22'
+
+      - name: Check versions
+        run: |
+          node --version
+          npm --version
+          which node
 
       - name: Install dependencies
         run: npm install
@@ -25,9 +31,6 @@ jobs:
 
       - name: Install Capacitor iOS
         run: npm install @capacitor/ios
-
-      - name: Add iOS platform
-        run: npx cap add ios
 
       - name: Sync Capacitor
         run: npx cap sync ios
