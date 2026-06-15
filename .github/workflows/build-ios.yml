@@ -67,5 +67,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: DigitalHuman.ipa
-          path: ios/App/DigitalHuman.ipa
+          path: DigitalHuman.ipa
           retention-days: 7
