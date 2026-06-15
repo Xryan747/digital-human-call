@@ -32,22 +32,47 @@ jobs:
       - name: Sync Capacitor
         run: node ./node_modules/.bin/cap sync ios
 
-      - name: Build IPA
+      - name: Resolve SPM packages
         run: |
           cd ios/App
-          xcodebuild -scheme App \
+          xcodebuild -resolvePackageDependencies -project App.xcodeproj -scheme App
+
+      - name: List schemes
+        run: |
+          cd ios/App
+          xcodebuild -list -project App.xcodeproj
+
+      - name: Archive
+        run: |
+          cd ios/App
+          xcodebuild archive \
+            -project App.xcodeproj \
+            -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
             -destination 'generic/platform=iOS' \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            DEVELOPMENT_TEAM="" \
-            archive
+            DEVELOPMENT_TEAM=""
+
+      - name: Export IPA
+        run: |
+          cd ios/App
+          cat > exportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>development</string>
+          </dict>
+          </plist>
+          EOF
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportPath build \
-            -exportOptionsPlist <(echo '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>method</key><string>development</string></dict></plist>') \
+            -exportOptionsPlist exportOptions.plist \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
