@@ -16,24 +16,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Check versions
-        run: |
-          node --version
-          npm --version
-          which node
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          node --version
+          npm install
 
       - name: Build web app
-        run: npx vite build
+        run: node ./node_modules/.bin/vite build
 
       - name: Install Capacitor iOS
         run: npm install @capacitor/ios
 
       - name: Sync Capacitor
-        run: npx cap sync ios
+        run: node ./node_modules/.bin/cap sync ios
 
       - name: Build IPA
         run: |
