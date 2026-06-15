@@ -16,7 +16,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
@@ -30,7 +29,7 @@ jobs:
       - name: Sync Capacitor
         run: node ./node_modules/.bin/cap sync ios
 
-      - name: Build app with xcodebuild
+      - name: Build app
         run: |
           cd ios/App
           xcodebuild \
@@ -44,28 +43,21 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             DEVELOPMENT_TEAM="" \
-            build 2>&1 | tail -30
+            build 2>&1 | grep -E "BUILD|error:" | tail -5
 
       - name: Package IPA
         run: |
-          # Find the built .app
-          APP_PATH=$(find ios/DerivedData -name "App.app" -path "*/Release-iphoneos/*" | head -1)
-          echo "App found at: $APP_PATH"
-          if [ -z "$APP_PATH" ]; then
-            echo "ERROR: Could not find built App.app"
-            find ios/DerivedData -name "App.app" 2>/dev/null || echo "No .app found anywhere"
-            exit 1
-          fi
-          # Create IPA
-          mkdir -p Payload
-          cp -r "$APP_PATH" Payload/
-          zip -r DigitalHuman.ipa Payload
-          rm -rf Payload
-          ls -la DigitalHuman.ipa
+          cd ios/App
+          APP=$(find ../DerivedData -name "App.app" -path "*/Release-iphoneos/*" | head -1)
+          echo "App: $APP"
+          mkdir Payload && cp -r "$APP" Payload/ && zip -qr App.ipa Payload && rm -rf Payload
+          ls -lh App.ipa
 
-      - name: Upload IPA
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: DigitalHuman.ipa
-          path: DigitalHuman.ipa
-          retention-days: 7
+          name: iOS Build
+          tag_name: build-${{ github.run_number }}
+          files: ios/App/App.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
